@@ -160,6 +160,17 @@ body.net-playing .hud,body.net-playing .guide,body.net-playing .guide-mobile,bod
 body.net-playing #pause{z-index:7}
 @media (pointer:coarse) and (orientation:landscape){.net-layer{font-size:12px;padding:5px}.net-layer .net-card{padding:9px;min-height:100%}.net-layer h2{font-size:20px}.net-layer button{padding:7px 9px;font-size:12px}.net-layer input{padding:8px 9px}.net-layer .net-choice{min-height:70px}.net-layer .net-pick-img{height:62px}.net-match-hud strong{font-size:9px}.net-match-hud small{font-size:8px}}
 
+
+/* ONLINE IN-GAME MODAL: no browser alerts/confirms */
+.sky-online-dialog{position:absolute;inset:0;z-index:1005;display:none;align-items:center;justify-content:center;background:#050d23c9;backdrop-filter:blur(5px);padding:18px;pointer-events:auto}
+.sky-online-dialog.visible{display:flex}
+.sky-online-dialog-box{width:min(520px,96%);max-height:95%;overflow:auto;border:2px solid #74d7ff;border-radius:18px;background:linear-gradient(155deg,#15254c,#19133d);box-shadow:0 22px 80px #000c;color:#fff;padding:23px 24px;text-align:center}
+.sky-online-dialog-box h2{font-size:clamp(19px,3.2vw,27px);margin:0 0 12px;color:#a9efff}
+.sky-online-dialog-box p{font-size:clamp(13px,2vw,17px);line-height:1.7;margin:7px 0 20px}
+.sky-online-dialog-box input{width:100%;padding:10px;border-radius:9px;background:#0c1937;color:#fff;border:1px solid #8bc8ff;margin:0 0 12px}
+.sky-online-dialog-actions{display:flex;justify-content:center;gap:12px;flex-wrap:wrap}
+.sky-online-dialog-actions button{font:inherit;font-weight:800;font-size:clamp(14px,2vw,18px);border-radius:10px;background:#2e91d5;color:#fff;border:1px solid #9edbff;padding:11px 22px;cursor:pointer}
+.sky-online-dialog-actions button.subtle{background:#293657}
 </style><script>
 /* ★ FIREBASE 設定：Firebase コンソールの「ウェブアプリの設定」をここに貼り付けてください。 */
 window.SKY_FIREBASE_CONFIG = {
@@ -757,8 +768,24 @@ const normName=s=>s.trim().normalize('NFKC').toLowerCase();
 const nameKey=s=>encodeURIComponent(normName(s)).replace(/\./g,'%2E');
 const serverNow=()=>Date.now()+serverTimeOffset;
 const snapVal=s=>s?.val()||{};
+// In-game dialogs replace blocking browser alert/confirm/prompt.
+let dialogResolve=null;
+function gameDialog(title,message,{confirm=false,affirm='OK',cancel='キャンセル',copyText=null}={}){
+ return new Promise(resolve=>{
+  let wrap=document.getElementById('skyOnlineDialog');
+  if(!wrap){wrap=document.createElement('div');wrap.id='skyOnlineDialog';wrap.className='sky-online-dialog';document.getElementById('gameFrame').appendChild(wrap)}
+  if(dialogResolve){dialogResolve(false);dialogResolve=null}
+  dialogResolve=resolve;
+  wrap.innerHTML=`<div class="sky-online-dialog-box" role="dialog" aria-modal="true" aria-label="${esc(title)}"><h2>${esc(title)}</h2><p>${esc(message)}</p>${copyText!==null?`<input id="skyCopyFallback" readonly value="${esc(copyText)}" aria-label="コピーする文字列">`:''}<div class="sky-online-dialog-actions">${confirm?`<button class="subtle" id="skyDialogCancel">${esc(cancel)}</button>`:''}<button id="skyDialogOK">${esc(affirm)}</button></div></div>`;
+  wrap.classList.add('visible');
+  const finish=v=>{wrap.classList.remove('visible');wrap.innerHTML='';dialogResolve=null;resolve(v)};
+  const ok=wrap.querySelector('#skyDialogOK'),no=wrap.querySelector('#skyDialogCancel');
+  ok.onclick=()=>finish(true);if(no)no.onclick=()=>finish(false);
+  if(copyText!==null){const input=wrap.querySelector('#skyCopyFallback');input.focus();input.select()}else ok.focus();
+ });
+}
 function banner(txt,error=false){let b=$('netBanner');if(!b){b=document.createElement('p');b.id='netBanner';layer.querySelector('.net-card')?.prepend(b)}if(b){b.className=error?'net-error':'net-success';b.textContent=txt}}
-function shell(title,body,back=true){screen=title;layer.classList.add('active');layer.innerHTML=`<section class="net-card"><div class="net-label">SKY CLASH · ONLINE</div><h2>${esc(title)}</h2>${body}<div class="net-buttonrow">${back?'<button class="subtle" id="onlineBack">◀ 戻る</button>':''}</div></section>`;const b=$('onlineBack');if(b)b.onclick=()=>{if(roomId)leaveRoom();else closePanel()};}
+function shell(title,body,back=true){screen=title;layer.classList.add('active');layer.innerHTML=`<section class="net-card"><div class="net-label">SKY CLASH · ONLINE</div><h2>${esc(title)}</h2>${body}<div class="net-buttonrow">${back?'<button class="subtle" id="onlineBack">◀ 戻る</button>':''}</div></section>`;const b=$('onlineBack');if(b)b.onclick=()=>{if(roomId)requestLeave();else if(screen==='フレンド'||screen==='ルームを作成'||screen==='ルームに参加')showHome();else closePanel()};}
 function closePanel(){if(roomId)return;layer.classList.remove('active','modal');layer.innerHTML='';screen='none';}
 function err(e){console.error('[SKY online]',e);banner(e?.message||String(e),true)}
 async function loadFirebase(){if(fb)return;
@@ -793,14 +820,16 @@ async function createRoom(){if(busy)return;const pwd=$('roomPwd').value;if(pwd.l
 function showJoinRoom(){shell('ルームに参加',`<p>友達から教えてもらったルームIDとパスワードを入力してね。招待から参加する場合はパスワード不要。</p><div class="net-row"><input id="joinCode" placeholder="ルームID（8文字）" maxlength="8" autocapitalize="characters"><input id="joinPwd" placeholder="パスワード" maxlength="30" type="text"></div><div class="net-row"><button id="joinConfirm">参加する</button></div>`);$('joinConfirm').onclick=()=>joinRoom($('joinCode').value,$('joinPwd').value)}
 async function joinRoom(id,password){if(busy)return;id=(id||'').toUpperCase().trim();if(!/^[A-Z2-9]{8}$/.test(id)){banner('ルームIDは8文字の英数字です。',true);return}busy=true;try{
  const s=await db.ref(`rooms/${id}/meta`).once('value');const meta=s.val();if(!meta||meta.phase!=='lobby')throw Error('このルームは存在しないか、対戦開始済みです。');
- await db.ref(`roomClaims/${id}/${me.uid}`).set(password);// 4人制限は Realtime Database ルール側で原子的に検証する。
+ await db.ref(`roomClaims/${id}/${me.uid}`).set(password);// 人数はUIでも確認する。厳密な上限はサーバールールの追加改善が必要。
  await db.ref(`rooms/${id}/members/${me.uid}`).set({name:profile.name,friendId:profile.friendId,joinedAt:fb.database.ServerValue.TIMESTAMP});await db.ref(`rooms/${id}/members/${me.uid}`).onDisconnect().remove();
  roomId=id;activeRoomPassword=password;watchRoom();if(password==='INVITED')await db.ref('invites/'+me.uid+'/'+id).remove().catch(()=>{});
  }catch(e){err(e)}finally{busy=false}}
+let disconnecting=false;
+async function closeDisconnectedRoom(message){if(disconnecting||!roomId)return;disconnecting=true;try{await leaveRoom(false);await gameDialog('オンラインのお知らせ',message)}finally{disconnecting=false}}
 function roomPath(p){return db.ref('rooms/'+roomId+'/'+p)}
 function watchRoom(){clearSubs(roomRefs);roomMeta=null;members={};ready={};votes={};phase='';phaseHandled='';
- roomRefs.push(sub(roomPath('meta'),s=>{const m=s.val();if(!m||m.phase==='closed'){if(roomId){alert('ルームが解散されました。');leaveRoom(false)}return}const previous=roomMeta?.phase;roomMeta=m;roomIsHost=m.host===me.uid;if(previous!==m.phase){phaseHandled='';ready={};votes={};onRoomPhase()}else updateCountdown()}));
- roomRefs.push(sub(roomPath('members'),s=>{members=snapVal(s);if(roomMeta?.host&&!members[roomMeta.host]&&roomMeta.host!==me.uid){alert('ホストが退出したため、ルームを終了します。');leaveRoom(false);return}if(!members[me.uid]&&roomId){leaveRoom(false);return}if(roomMeta?.phase==='lobby')renderRoom();if(roomMeta?.phase==='character')renderReadyStatus();}));
+ roomRefs.push(sub(roomPath('meta'),s=>{const m=s.val();if(!m||m.phase==='closed'){if(roomId)closeDisconnectedRoom('ルームが解散されました。');return}const previous=roomMeta?.phase;roomMeta=m;roomIsHost=m.host===me.uid;if(previous!==m.phase){phaseHandled='';ready={};votes={};onRoomPhase()}else updateCountdown()}));
+ roomRefs.push(sub(roomPath('members'),s=>{members=snapVal(s);if(roomMeta?.host&&!members[roomMeta.host]&&roomMeta.host!==me.uid){closeDisconnectedRoom('ホストが退出したため、ルームを終了しました。');return}if(!members[me.uid]&&roomId){closeDisconnectedRoom('ルームから退出しました。');return}if(roomMeta?.phase==='lobby')renderRoom();if(roomMeta?.phase==='character')renderReadyStatus();}));
  roomRefs.push(sub(roomPath('ready'),s=>{ready=snapVal(s);renderReadyStatus();if(roomIsHost&&roomMeta?.phase==='character')maybeStartMatch()}));
  roomRefs.push(sub(roomPath('votes'),s=>{votes=snapVal(s);if(roomMeta?.phase==='stage'||roomMeta?.phase==='results')renderVoteSummary()}));
  roomRefs.push(sub(roomPath('inputs'),s=>{if(roomIsHost)hostInputs=snapVal(s)}));
@@ -810,10 +839,10 @@ function watchRoom(){clearSubs(roomRefs);roomMeta=null;members={};ready={};votes
 function onRoomPhase(){if(!roomMeta||!roomId)return;const m=roomMeta;
  if(m.phase==='lobby')renderRoom();
  else if(m.phase==='format')renderFormat();
- else if(m.phase==='stage')renderStageVote();
+ else if(m.phase==='stage'){roomPath('ready/'+me.uid).remove().catch(e=>console.warn('ready reset',e));roomPath('votes/stage/'+me.uid).remove().catch(e=>console.warn('stage vote reset',e));renderStageVote();}
  else if(m.phase==='character')renderCharacterPick();
  else if(m.phase==='battle')startBattleView();
- else if(m.phase==='results')renderResults();
+ else if(m.phase==='results'){roomPath('votes/results/'+me.uid).remove().catch(e=>console.warn('results vote reset',e));renderResults();}
 }
 function roomMembers(){return Object.entries(members).sort((a,b)=>(a[1].joinedAt||0)-(b[1].joinedAt||0))}
 function renderRoom(){if(!roomId||!roomMeta||roomMeta.phase!=='lobby')return;const entries=roomMembers();const membersHtml=entries.map(([uid,data],i)=>`<div class="net-item"><span>${i+1}. <strong>${esc(data.name)}</strong> ${uid===roomMeta.host?'<small>HOST</small>':''}</span><span>${uid!==me.uid?`<button class="subtle" data-friendreq="${esc(uid)}">フレンド申請</button>`:'あなた'}</span></div>`).join('');
@@ -824,7 +853,7 @@ function renderRoom(){if(!roomId||!roomMeta||roomMeta.phase!=='lobby')return;con
 }
 async function renderInviteFriends(){const el=$('roomFriends');if(!el||!roomIsHost)return;const data=await Promise.all(Object.keys(friends).map(async uid=>{const [p,z]=await Promise.all([db.ref('profiles/'+uid).once('value'),db.ref('presence/'+uid).once('value')]);return{uid,p:p.val(),online:!!z.val()?.online}}));if(!el.isConnected)return;el.innerHTML=data.filter(x=>x.p).map(x=>`<div class="net-item"><span>${esc(x.p.name)} <small>${x.online?'🟢 オンライン':'⚫ オフライン'}</small></span><button data-invite-uid="${esc(x.uid)}" ${!x.online?'disabled':''}>招待</button></div>`).join('')||'<p class="net-note">フレンドがいません。フレンドIDから追加できます。</p>';el.querySelectorAll('[data-invite-uid]').forEach(b=>b.onclick=()=>inviteFriend(b.dataset.inviteUid))}
 async function inviteFriend(uid){try{await db.ref(`invites/${uid}/${roomId}`).set({from:me.uid,fromName:profile.name,time:fb.database.ServerValue.TIMESTAMP});banner('ルームへの招待を送ったよ。')}catch(e){err(e)}}
-async function startRoom(){if(!roomIsHost||roomMembers().length<2)return;try{const isDuo=roomMembers().length===2;await roomPath('meta').update({phase:isDuo?'stage':'format',deadline:isDuo?serverNow()+5000:0,round:(roomMeta.round||0)+1})}catch(e){err(e)}}
+async function startRoom(){if(!roomIsHost||roomMembers().length<2)return;if(roomMembers().length>4){banner('参加者が4人を超えています。ルームを作り直してください。',true);return}try{const isDuo=roomMembers().length===2;await roomPath('meta').update({phase:isDuo?'stage':'format',deadline:isDuo?serverNow()+5000:0,round:(roomMeta.round||0)+1})}catch(e){err(e)}}
 function renderFormat(){if(!roomId)return;shell('対戦形式を選択',`<p>3〜4人の対戦。ホストが個人戦かチーム戦を選ぶよ。2人戦ではこの画面をスキップ。</p>${roomIsHost?'<div class="net-grid"><button id="formatFFA">⚔ 個人戦（全員敵）</button><button id="formatTeam">🤝 チーム戦（2チーム）</button></div>':'<p>ホストが対戦形式を選択しています…</p>'}` ,false);if(roomIsHost){$('formatFFA').onclick=()=>selectFormat('ffa');$('formatTeam').onclick=()=>selectFormat('team')}}
 async function selectFormat(format){if(!roomIsHost)return;try{await roomPath('meta').update({format,phase:'stage',deadline:serverNow()+5000})}catch(e){err(e)}}
 function renderStageVote(){chosenStage='';const secs=Math.max(0,Math.ceil((roomMeta.deadline-serverNow())/1000));shell('ステージ投票（5秒）',`<p>みんなで多数決。引き分けはランダム、無投票もランダムで決定！</p><div class="net-timer" id="onlineTimer">${secs}</div><div class="net-grid"><button id="voteGrass">🌿 草原・浮島</button><button id="voteTown">🏰 町・石畳</button></div><p id="voteSummary" class="net-note">集計中…</p>`,false);$('voteGrass').onclick=()=>castVote('stage','grass');$('voteTown').onclick=()=>castVote('stage','town');renderVoteSummary()}
@@ -833,9 +862,9 @@ function renderVoteSummary(){if(!roomMeta)return;let data=votes[roomMeta.phase]|
 function updateCountdown(){if(!roomMeta)return;const el=$('onlineTimer');if(el)el.textContent=Math.max(0,Math.ceil((roomMeta.deadline-serverNow())/1000));}
 function randomFrom(arr){return arr[Math.floor(Math.random()*arr.length)]}
 async function phaseTick(){if(!roomId||!roomIsHost||!roomMeta||waiting)return;const m=roomMeta;if(m.phase!=='stage'&&m.phase!=='results')return;if(!m.deadline||serverNow()<m.deadline)return;waiting=true;try{
- if(m.phase==='stage'){const a=(votes.stage||{}),grass=Object.values(a).filter(x=>x==='grass').length,town=Object.values(a).filter(x=>x==='town').length,stage=grass===town?randomFrom(['grass','town']):grass>town?'grass':'town';await roomPath('ready').remove();await roomPath('meta').update({phase:'character',stage,deadline:0})}
- else{const a=(votes.results||{}),count={replay:0,format:0,close:0};for(const val of Object.values(a)){if(val in count)count[val]++}const max=Math.max(...Object.values(count)),pick=max===0?'format':randomFrom(Object.keys(count).filter(k=>count[k]===max));if(pick==='close')await roomPath('meta').update({phase:'closed'});else if(pick==='replay'){await roomPath('meta').update({phase:'battle',deadline:0,battleId:(m.battleId||0)+1})}else{await roomPath('ready').remove();await roomPath('meta').update({phase:roomMembers().length===2?'stage':'format',deadline:roomMembers().length===2?serverNow()+5000:0,round:(m.round||0)+1});}}
- }catch(e){console.warn(e)}finally{waiting=false}}
+ if(m.phase==='stage'){const a=(votes.stage||{}),grass=Object.values(a).filter(x=>x==='grass').length,town=Object.values(a).filter(x=>x==='town').length,stage=grass===town?randomFrom(['grass','town']):grass>town?'grass':'town';await roomPath('meta').update({phase:'character',stage,deadline:0})}
+ else{const a=(votes.results||{}),count={replay:0,format:0,close:0};for(const val of Object.values(a)){if(val in count)count[val]++}const max=Math.max(...Object.values(count)),pick=max===0?'format':randomFrom(Object.keys(count).filter(k=>count[k]===max));if(pick==='close')await roomPath('meta').update({phase:'closed'});else if(pick==='replay'){await roomPath('meta').update({phase:'battle',deadline:0,battleId:(m.battleId||0)+1})}else{await roomPath('meta').update({phase:roomMembers().length===2?'stage':'format',deadline:roomMembers().length===2?serverNow()+5000:0,round:(m.round||0)+1});}}
+ }catch(e){console.error('投票進行エラー',e);banner('投票の進行に失敗しました：'+(e?.message||'接続を確認してください'),true)}finally{waiting=false}}
 function renderCharacterPick(){chosenCharacter='sword';const types=['sword','hammer','mage','thief'];const cards=types.map(type=>`<button class="net-choice ${chosenCharacter===type?'selected':''}" data-pick="${type}"><img class="net-pick-img" id="onlineIcon_${type}" alt=""><span>${esc(CHAR_NAMES[type])}</span></button>`).join('');shell('キャラクター選択',`<p>ステージ：<b>${roomMeta.stage==='town'?'町':'草原'}</b>。誰が何を選んだかは、全員が準備完了するまで見えないよ。</p><div class="net-grid">${cards}</div><div class="net-row"><button id="readyButton">✓ 準備OK</button></div><p id="readyList" class="net-note"></p>`,false);
  for(const type of types){const im=$('onlineIcon_'+type);try{im.src=window.SKY_NET_BRIDGE.thumbnail(type)}catch(_){im.style.display='none'}}
  layer.querySelectorAll('[data-pick]').forEach(b=>b.onclick=()=>{if(ready[me.uid])return;chosenCharacter=b.dataset.pick;layer.querySelectorAll('[data-pick]').forEach(x=>x.classList.toggle('selected',x===b))});$('readyButton').onclick=submitReady;renderReadyStatus()}
@@ -859,7 +888,8 @@ function setInput(kind,value){if(roomMeta?.phase!=='battle')return;
  else if(value==='down'){if(kind==='attack')localInput.attackSeq++;if(kind==='special')localInput.specialSeq++;if(kind==='jump')localInput.jumpSeq++}
  if(Date.now()-sentInputAt>45||['attack','special','jump'].includes(kind))sendInput();}
 window.SKY_NET_INPUT=setInput;
-window.SKY_NET_LEAVE_PROMPT=()=>{if(confirm('オンライン対戦から退出してタイトルに戻る？'))leaveRoom()};
+async function requestLeave(){if(await gameDialog('ルームから退出','ルームから退出してオンラインホームに戻りますか？',{confirm:true,affirm:'退出する'}))await leaveRoom()}
+window.SKY_NET_LEAVE_PROMPT=requestLeave;
 function keyMovement(){return (pressed.has('KeyD')?1:0)-(pressed.has('KeyA')?1:0)}
 const pressed=new Set();
 window.addEventListener('keydown',e=>{if(window.SKY_NET_BRIDGE?.mode()!=='netplaying')return;if(['KeyA','KeyD','Space','KeyF','Escape'].includes(e.code))e.preventDefault();if(e.code==='Escape'){window.SKY_NET_LEAVE_PROMPT();return}if(pressed.has(e.code))return;pressed.add(e.code);if(e.code==='KeyA'||e.code==='KeyD')setInput('stick',keyMovement());if(e.code==='KeyF')setInput('guard','down');if(e.code==='Space')setInput('jump','down')},true);
@@ -878,15 +908,15 @@ function renderResults(){hud.classList.remove('active');document.body.classList.
 async function leaveRoom(write=true){if(!roomId){closePanel();return}const id=roomId,isHost=roomIsHost;roomId='';roomMeta=null;phase='';clearSubs(roomRefs);hud.classList.remove('active');document.body.classList.remove('net-playing');if(window.SKY_NET_BRIDGE?.mode()==='netplaying')window.SKY_NET_BRIDGE.stop();
  if(write&&db&&me){try{if(isHost)await db.ref('rooms/'+id+'/meta').update({phase:'closed'});await db.ref(`rooms/${id}/members/${me.uid}`).remove()}catch(e){console.warn(e)}}
  roomIsHost=false;members={};ready={};votes={};if(profile)showHome();else closePanel();}
-async function copy(v){try{await navigator.clipboard.writeText(v);banner('コピーしました！')}catch(_){prompt('コピーしてね：',v)}}
+async function copy(v){try{await navigator.clipboard.writeText(v);banner('コピーしました！')}catch(_){await gameDialog('コピーする文字列','下の文字列を長押ししてコピーしてね。',{copyText:v})}}
 async function sendRequest(uid){if(!uid||uid===me.uid){banner('自分自身には申請できません。',true);return}try{if(friends[uid]){banner('既にフレンドです。');return}await db.ref(`requests/${uid}/${me.uid}`).set({fromName:profile.name,at:fb.database.ServerValue.TIMESTAMP});banner('フレンド申請を送信しました！')}catch(e){err(e)}}
-function showFriends(back=true){if(!profile)return;shell('フレンド',`<p>あなたのフレンドID： <strong id="myFriendID">${esc(profile.friendId)}</strong> <button id="copyFriendID">コピー</button></p><div class="net-row"><input id="searchFriendID" placeholder="相手のフレンドID（SC-XXXXXXXX）" maxlength="11"><button id="searchFriendBtn">検索・申請</button></div><h3>届いた申請</h3><div id="friendRequests" class="net-list"></div><h3>フレンド一覧</h3><div id="friendList" class="net-list"></div>` ,back);$('copyFriendID').onclick=()=>copy(profile.friendId);$('searchFriendBtn').onclick=searchFriend;renderFriendRequests();renderFriendList();}
-async function searchFriend(){const id=($('searchFriendID')?.value||'').toUpperCase().trim();if(!/^SC-[A-Z2-9]{8}$/.test(id)){banner('SC-で始まるフレンドIDを入力してね。',true);return}try{const s=await db.ref('ids/'+id).once('value');const uid=s.val();if(!uid)throw Error('そのフレンドIDは見つかりません。');if(uid===me.uid)throw Error('自分は追加できません。');const p=(await db.ref('profiles/'+uid).once('value')).val();if(!p)throw Error('ユーザーが見つかりません');if(!confirm(p.name+' にフレンド申請する？'))return;await sendRequest(uid)}catch(e){err(e)}}
+function showFriends(back=true){if(!profile)return;shell('フレンド',`<p>あなたのフレンドID： <strong id="myFriendID">${esc(profile.friendId)}</strong> <button id="copyFriendID">コピー</button></p><div class="net-row"><input id="searchFriendID" placeholder="相手のフレンドID（SC-XXXXXXXX）" maxlength="11"><button id="searchFriendBtn">検索・申請</button></div><h3>届いた申請</h3><div id="friendRequests" class="net-list"></div><h3>フレンド一覧</h3><div id="friendList" class="net-list"></div>` ,back);const backButton=$('onlineBack');if(backButton){backButton.textContent='◀ オンラインホームへ';backButton.onclick=showHome;} $('copyFriendID').onclick=()=>copy(profile.friendId);$('searchFriendBtn').onclick=searchFriend;renderFriendRequests();renderFriendList();}
+async function searchFriend(){const id=($('searchFriendID')?.value||'').toUpperCase().trim();if(!/^SC-[A-Z2-9]{8}$/.test(id)){banner('SC-で始まるフレンドIDを入力してね。',true);return}try{const s=await db.ref('ids/'+id).once('value');const uid=s.val();if(!uid)throw Error('そのフレンドIDは見つかりません。');if(uid===me.uid)throw Error('自分は追加できません。');const p=(await db.ref('profiles/'+uid).once('value')).val();if(!p)throw Error('ユーザーが見つかりません');if(!await gameDialog('フレンド申請',p.name+' にフレンド申請する？',{confirm:true,affirm:'申請する'}))return;await sendRequest(uid)}catch(e){err(e)}}
 function renderFriendRequests(){const el=$('friendRequests');if(!el)return;const entries=Object.entries(requests);el.innerHTML=entries.map(([uid,data])=>`<div class="net-item"><span><strong>${esc(data.fromName)}</strong> <small>申請中</small></span><span><button data-accept="${esc(uid)}">承諾</button> <button class="subtle" data-reject="${esc(uid)}">拒否</button></span></div>`).join('')||'<p class="net-note">申請は届いていません。</p>';
  el.querySelectorAll('[data-accept]').forEach(b=>b.onclick=()=>acceptFriend(b.dataset.accept));el.querySelectorAll('[data-reject]').forEach(b=>b.onclick=()=>db.ref('requests/'+me.uid+'/'+b.dataset.reject).remove().catch(err))}
 async function acceptFriend(uid){try{const patch={};patch[`friends/${me.uid}/${uid}`]={fav:false};patch[`friends/${uid}/${me.uid}`]={fav:false};patch[`requests/${me.uid}/${uid}`]=null;await db.ref().update(patch);banner('フレンドになったよ！')}catch(e){err(e)}}
 async function renderFriendList(){const el=$('friendList');if(!el)return;const entries=await Promise.all(Object.entries(friends).map(async ([uid,data])=>{const [p,z]=await Promise.all([db.ref('profiles/'+uid).once('value'),db.ref('presence/'+uid).once('value')]);return{uid,data,p:p.val(),online:!!z.val()?.online}}));if(!el.isConnected)return;entries.sort((a,b)=>(b.data.fav?1:0)-(a.data.fav?1:0));el.innerHTML=entries.map(x=>`<div class="net-item"><span><strong>${esc(x.p?.name||'?')}</strong> <small>${x.online?'🟢 オンライン':'⚫ オフライン'} / ${esc(x.p?.friendId||'')}</small></span><span><button class="subtle" data-star="${esc(x.uid)}">${x.data.fav?'★ お気に入り':'☆ お気に入り'}</button> <button class="warning" data-delete="${esc(x.uid)}">削除</button></span></div>`).join('')||'<p class="net-note">フレンドがいません。</p>';el.querySelectorAll('[data-star]').forEach(b=>b.onclick=()=>db.ref('friends/'+me.uid+'/'+b.dataset.star+'/fav').set(!friends[b.dataset.star]?.fav).catch(err));el.querySelectorAll('[data-delete]').forEach(b=>b.onclick=()=>deleteFriend(b.dataset.delete))}
-async function deleteFriend(uid){if(!confirm('このフレンドを削除する？'))return;try{await db.ref().update({[`friends/${me.uid}/${uid}`]:null,[`friends/${uid}/${me.uid}`]:null});banner('削除しました')}catch(e){err(e)}}
+async function deleteFriend(uid){if(!await gameDialog('フレンド削除','このフレンドを削除しますか？',{confirm:true,affirm:'削除する'}))return;try{await db.ref().update({[`friends/${me.uid}/${uid}`]:null,[`friends/${uid}/${me.uid}`]:null});banner('削除しました')}catch(e){err(e)}}
 function doTick(){if(roomId&&roomMeta){updateCountdown();if(roomIsHost){phaseTick();if(roomMeta.phase==='character')maybeStartMatch()}if(roomMeta.phase==='battle'&&window.SKY_NET_BRIDGE?.mode()==='netplaying')updateHUD()}}
 setInterval(doTick,180);
 $('netConnect').onclick=connect;
