@@ -224,7 +224,21 @@ window.SKY_FIREBASE_CONFIG = {
 #gameFrame:has(#settingsOverlay.active) #settingsOverlay,#gameFrame:has(#settingsOverlay.active) #controls{visibility:visible}
 @media(pointer:coarse){#settingsOverlay .overlay-panel{width:94%;max-height:50%}.key-grid{grid-template-columns:repeat(3,1fr)}}
 </style><style id="skyOnlineFixFinal">.net-card.sky-friends-card{position:relative;padding-top:52px!important}#friendsBackPinned{position:sticky;top:9px;float:right;z-index:40;border:2px solid #98dfff;color:white;background:#2169a5;border-radius:9px;padding:10px 19px;font-size:15px;font-weight:900;cursor:pointer}.net-card.sky-friends-card .net-buttonrow{display:flex!important;justify-content:flex-end}@media (pointer:coarse){#friendsBackPinned{padding:12px 20px;font-size:16px}}</style>
-</head><body><div id="orientationNotice"><div>📱 ↻<div>横画面にしてプレイしてね！</div><small>SKY CLASH は縦画面に対応していません。</small></div></div><div id="gameFrame"><div id="netQuick" class="net-quick"><button id="netConnect" type="button">◉ オンライン接続</button><button id="netFriends" type="button">♧ フレンド</button><span id="netStatus">オフライン</span></div><div id="netLayer" class="net-layer" aria-live="polite"></div><div id="netMatchHUD" class="net-match-hud"></div><canvas id="game"></canvas><div id="ui"><div class="header">SKY CLASH <span style="color:#69d4ff">/</span> CHARACTER BATTLE</div><div class="guide">A / D：移動　 SPACE：二段ジャンプ　 左クリック：通常攻撃　 右クリック：キャラ固有技　 F：ガード</div><div class="guide-mobile">左スティック：移動　右ボタン：攻撃・特殊・ジャンプ・ガード</div><button id="pause" class="pause">Ⅱ 一時停止</button><div class="hud"><div class="hud-card"><div class="guard-row"><span class="guard-label">GUARD</span><span id="guards1" class="guard-icons"></span></div><div class="stock-status"><span>STOCKS</span><span class="stock-count" id="stock1">● ● ●</span></div><div class="hp-meta"><span class="name" style="color:#77d3ff">PLAYER <small id="playerName"></small></span><span class="value"><span id="hp1">100</span><span class="caption"> / 100 HP</span></span></div><div class="bar"><div id="bar1" class="fill"></div></div><div class="special-label">固有スキル <span id="specialText1">READY</span></div><div class="special-bar"><div class="special-fill" id="special1"></div></div></div><div class="hud-card bot"><div class="guard-row"><span class="guard-label">GUARD</span><span id="guards2" class="guard-icons"></span></div><div class="stock-status"><span>STOCKS</span><span class="stock-count" id="stock2">● ● ●</span></div><div class="hp-meta"><span class="name" style="color:#ff9ca8">BOT <small id="botName"></small></span><span class="value"><span id="hp2">100</span><span class="caption"> / 100 HP</span></span></div><div class="bar"><div id="bar2" class="fill"></div></div><div class="special-label">固有スキル <span id="specialText2">READY</span></div><div class="special-bar"><div class="special-fill" id="special2"></div></div></div></div><div id="controls" aria-label="スマホ操作">
+<style id="skyNetPerformancePerspectiveV2">
+/* Reuse the original BOT HUD styling in network matches. */
+.net-match-hud.active{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;top:48px;left:max(12px,3vw);right:max(12px,3vw);width:auto;z-index:6}
+.net-match-hud .hud-card{width:min(360px,44%);max-width:360px;padding:12px 14px;flex:0 1 auto}
+.net-match-hud .hud-card .name{font-size:13px;color:#77d3ff}
+.net-match-hud .hud-card.bot .name{color:#ff9ca8}
+.net-match-hud .hud-card .hp-meta{display:flex;align-items:baseline;justify-content:space-between;gap:5px}
+.net-match-hud .hud-card .guard-row,.net-match-hud .hud-card .stock-status{display:flex;gap:6px;align-items:center}
+.net-match-hud .hud-card .bar{height:16px}
+.net-match-hud .hud-card .special-bar{height:9px}
+.net-match-hud .hud-card .hp-number{font-size:25px;font-weight:1000}
+.net-match-hud .hud-card .stock-count{font-size:16px}
+.net-match-hud .hud-card .guard-icon{width:18px;height:18px}
+@media(max-width:750px){.net-match-hud.active{top:32px;left:8px;right:8px;gap:5px}.net-match-hud .hud-card{padding:6px 8px;width:46%;border-radius:8px}.net-match-hud .hud-card .hp-number{font-size:clamp(13px,3dvh,22px)}.net-match-hud .hud-card .guard-icon{width:clamp(10px,2.6dvh,18px);height:clamp(10px,2.6dvh,18px)}.net-match-hud .hud-card .stock-count{font-size:12px}.net-match-hud .hud-card .bar{height:10px}.net-match-hud .hud-card .name{font-size:10px}}
+</style></head><body><div id="orientationNotice"><div>📱 ↻<div>横画面にしてプレイしてね！</div><small>SKY CLASH は縦画面に対応していません。</small></div></div><div id="gameFrame"><div id="netQuick" class="net-quick"><button id="netConnect" type="button">◉ オンライン接続</button><button id="netFriends" type="button">♧ フレンド</button><span id="netStatus">オフライン</span></div><div id="netLayer" class="net-layer" aria-live="polite"></div><div id="netMatchHUD" class="net-match-hud"></div><canvas id="game"></canvas><div id="ui"><div class="header">SKY CLASH <span style="color:#69d4ff">/</span> CHARACTER BATTLE</div><div class="guide">A / D：移動　 SPACE：二段ジャンプ　 左クリック：通常攻撃　 右クリック：キャラ固有技　 F：ガード</div><div class="guide-mobile">左スティック：移動　右ボタン：攻撃・特殊・ジャンプ・ガード</div><button id="pause" class="pause">Ⅱ 一時停止</button><div class="hud"><div class="hud-card"><div class="guard-row"><span class="guard-label">GUARD</span><span id="guards1" class="guard-icons"></span></div><div class="stock-status"><span>STOCKS</span><span class="stock-count" id="stock1">● ● ●</span></div><div class="hp-meta"><span class="name" style="color:#77d3ff">PLAYER <small id="playerName"></small></span><span class="value"><span id="hp1">100</span><span class="caption"> / 100 HP</span></span></div><div class="bar"><div id="bar1" class="fill"></div></div><div class="special-label">固有スキル <span id="specialText1">READY</span></div><div class="special-bar"><div class="special-fill" id="special1"></div></div></div><div class="hud-card bot"><div class="guard-row"><span class="guard-label">GUARD</span><span id="guards2" class="guard-icons"></span></div><div class="stock-status"><span>STOCKS</span><span class="stock-count" id="stock2">● ● ●</span></div><div class="hp-meta"><span class="name" style="color:#ff9ca8">BOT <small id="botName"></small></span><span class="value"><span id="hp2">100</span><span class="caption"> / 100 HP</span></span></div><div class="bar"><div id="bar2" class="fill"></div></div><div class="special-label">固有スキル <span id="specialText2">READY</span></div><div class="special-bar"><div class="special-fill" id="special2"></div></div></div></div><div id="controls" aria-label="スマホ操作">
  <div class="ctrl" id="ctrl-stick" data-control="stick"><div id="stickKnob"></div></div>
  <button class="ctrl" id="ctrl-attack" data-control="attack">攻撃</button>
  <button class="ctrl" id="ctrl-special" data-control="special">特殊</button>
@@ -797,12 +811,12 @@ function drawSlashes(){
   c.restore();
  }
 }
-function render(){if(settingsOverlay.classList.contains('active')){const oldStage=selectedStage;selectedStage='town';c.setTransform(dpr,0,0,dpr,0,0);drawBackground(c);c.save();c.translate(offX,offY);c.scale(scale,scale);const platform={x:-120,y:452,w:1240,h:240,art:'town'};drawPlatform(platform);const preview=makeFighter(500,1,false,selectedPlayer);preview.y=452;preview.anim=0;drawWarrior(preview);c.restore();selectedStage=oldStage;return}c.setTransform(dpr,0,0,dpr,0,0);if(backgroundCache)c.drawImage(backgroundCache,0,0,W,H);else drawBackground(c);c.save();c.translate(offX,offY);c.scale(scale,scale);for(const p of platforms)drawPlatform(p);if(mode==='netplaying'){for(const f of netFighters){drawWarrior(f);drawShield(f)}for(const a of netProjectiles)netDrawProjectile(a);}else{drawWarrior(player);drawWarrior(bot);drawSlashes();drawShield(player);drawShield(bot);}for(const f of fx){c.globalAlpha=clamp(f.life/f.max,0,1);rect(f.x,f.y,5,5,f.col)}c.globalAlpha=1;c.restore()}
+function render(){if(settingsOverlay.classList.contains('active')){const oldStage=selectedStage;selectedStage='town';c.setTransform(dpr,0,0,dpr,0,0);drawBackground(c);c.save();c.translate(offX,offY);c.scale(scale,scale);const platform={x:-120,y:452,w:1240,h:240,art:'town'};drawPlatform(platform);const preview=makeFighter(500,1,false,selectedPlayer);preview.y=452;preview.anim=0;drawWarrior(preview);c.restore();selectedStage=oldStage;return}c.setTransform(dpr,0,0,dpr,0,0);if(mode==='netplaying'&&netViewMirror){c.save();c.translate(W,0);c.scale(-1,1)}if(backgroundCache)c.drawImage(backgroundCache,0,0,W,H);else drawBackground(c);if(mode==='netplaying'&&netViewMirror)c.restore();c.save();c.translate(offX,offY);c.scale(scale,scale);if(mode==='netplaying'&&netViewMirror){c.translate(1000,0);c.scale(-1,1)}for(const p of platforms)drawPlatform(p);if(mode==='netplaying'){for(const f of netFighters){drawWarrior(f);drawShield(f)}for(const a of netProjectiles)netDrawProjectile(a);}else{drawWarrior(player);drawWarrior(bot);drawSlashes();drawShield(player);drawShield(bot);}for(const f of fx){c.globalAlpha=clamp(f.life/f.max,0,1);rect(f.x,f.y,5,5,f.col)}c.globalAlpha=1;c.restore()}
 // Online match renderer + host-authoritative 60Hz simulation.
-let netFighters=[],netProjectiles=[],netIsHost=false,netFormat='ffa',netEnded=false,netFrameSeq=0,netRemoteTargets=new Map();
+let netFighters=[],netProjectiles=[],netIsHost=false,netFormat='ffa',netEnded=false,netFrameSeq=0,netRemoteTargets=new Map(),netViewMirror=false,netOwnUid='';
 const NET_SPAWNS=[285,715,425,575];
 function netSetup({stage,roster,format,host}){
- setStage(stage==='town'?'town':'grass');netIsHost=!!host;netFormat=format==='team'?'team':'ffa';netEnded=false;netFrameSeq=0;netRemoteTargets.clear();
+ setStage(stage==='town'?'town':'grass');netIsHost=!!host;netFormat=format==='team'?'team':'ffa';netEnded=false;netFrameSeq=0;netRemoteTargets.clear();netOwnUid=window.SKY_NET_LOCAL_UID?.()||'';netViewMirror=Object.keys(roster||{}).indexOf(netOwnUid)%2===1;
  netProjectiles=[];netFighters=Object.entries(roster).slice(0,4).map(([uid,data],i)=>{const f=makeFighter(NET_SPAWNS[i],i%2? -1:1,false,data.type||'sword'); f.y=300;f.onGround=false;f.stocks=3;f.uid=uid;f.team=data.team??(i%2);f.displayLabel=(data.name||'PLAYER').slice(0,12);f.lastAttack=0;f.lastSpecial=0;f.lastJump=0;f.netAttackId=0;f.netSpecialId=0;return f});
  center.classList.add('hidden');selector.classList.remove('active');document.getElementById('modeSelect').classList.remove('active');document.getElementById('stageSelect').classList.remove('active');pauseOverlay.classList.remove('active');
  mode='netplaying';clearTouch();updateTouchVisibility();document.body.classList.add('net-playing');
@@ -868,10 +882,10 @@ function netDrawProjectile(a){
  else {if(slashImg.complete&&slashImg.naturalWidth)c.drawImage(outlinedEffect('slash',slashImg,64,64,6,2),Math.floor(a.life*14)%6*64,0,64,64,-42,-36,84,72);else{c.fillStyle='#9cfcff';c.fillRect(-10,-22,40,40)}}
  c.restore();
 }
-function netSerialize(){return{seq:netFrameSeq,at:Date.now(),players:netFighters.map(f=>{const props=['uid','type','team','displayLabel','x','y','vx','vy','face','hp','stocks','guard','guardPhase','guardHolding','guardBroken','stun','knockTime','knockAge','recoilGuard','hurtTint','inv','onGround','attackTime','attackCooldown','rangedTime','rangedCooldown','slamTime','dashTime','anim','jumps'];return Object.fromEntries(props.map(k=>[k,f[k]]))}),projectiles:netProjectiles.map(a=>({...a}))}}
-function netReceive(s){if(netIsHost||!s?.players||mode!=='netplaying')return;for(const incoming of s.players){let f=netFighters.find(x=>x.uid===incoming.uid);if(!f){f=makeFighter(incoming.x, incoming.face,false,incoming.type);netFighters.push(f)}const ox=f.x,oy=f.y;Object.assign(f,incoming);f.x=ox;f.y=oy;netRemoteTargets.set(f.uid,{x:incoming.x,y:incoming.y})}netProjectiles=(s.projectiles||[]).map(a=>({...a}));}
-function netAnimateGuest(dt){for(const f of netFighters){const target=netRemoteTargets.get(f.uid);if(!target)continue;const smoothing=Math.min(1,dt*25);f.x+=(target.x-f.x)*smoothing;f.y+=(target.y-f.y)*smoothing;f.anim+=dt;if(f.knockTime>0){f.knockTime=Math.max(0,f.knockTime-dt);f.knockAge+=dt}if(f.inv>0)f.inv=Math.max(0,f.inv-dt);}for(const a of netProjectiles)a.life+=dt}
-window.SKY_NET_BRIDGE={start:netSetup,receive:netReceive,step:(dt,inputs)=>{if(netIsHost)netHostStep(dt,inputs||{});else netAnimateGuest(dt)},snapshot:netSerialize,stop:()=>{netFighters=[];netProjectiles=[];netRemoteTargets.clear();netIsHost=false;document.body.classList.remove('net-playing');backMenu();},getFighters:()=>netFighters,mode:()=>mode,thumbnail:(type)=>{const im=type==='hammer'?hammerImgs.idle:type==='mage'?mageImgs.idle:type==='thief'?thiefImgs.idle:imgs.idle;const out=document.createElement('canvas');out.width=110;out.height=110;const cx=out.getContext('2d');if(im?.complete&&im.naturalWidth){cx.imageSmoothingEnabled=false;const sw=im.naturalWidth/(type==='thief'?4:6),sh=im.naturalHeight;cx.drawImage(im,0,0,sw,sh,12,5,86,100)}return out.toDataURL('image/png')}};
+function netSerialize(){return{seq:netFrameSeq,at:Date.now(),players:netFighters.map(f=>{const props=['uid','type','team','displayLabel','x','y','vx','vy','face','hp','stocks','guard','guardPhase','guardHolding','guardBroken','stun','knockTime','knockAge','recoilGuard','hurtTint','inv','onGround','attackTime','attackCooldown','rangedTime','rangedCooldown','slamTime','dashTime','anim','jumps'];return Object.fromEntries(props.map(k=>[k,f[k]]))}),projectiles:netProjectiles.map(a=>({uid:a.uid,type:a.type,x:a.x,y:a.y,vx:a.vx,dist:a.dist,range:a.range,damage:a.damage,life:a.life,face:a.face,team:a.team}))}}
+function netReceive(s){if(netIsHost||!s?.players||mode!=='netplaying')return;for(const incoming of s.players){let f=netFighters.find(x=>x.uid===incoming.uid);if(!f){f=makeFighter(incoming.x, incoming.face,false,incoming.type);netFighters.push(f)}const ox=f.x,oy=f.y;Object.assign(f,incoming);f.x=ox;f.y=oy;netRemoteTargets.set(f.uid,{x:incoming.x,y:incoming.y,vx:incoming.vx||0,vy:incoming.vy||0,stamp:performance.now()})}const incomingProjectiles=s.projectiles||[];if(netProjectiles.length!==incomingProjectiles.length){netProjectiles=incomingProjectiles.map(a=>({...a}))}else{for(let i=0;i<incomingProjectiles.length;i++)Object.assign(netProjectiles[i],incomingProjectiles[i])}}
+function netAnimateGuest(dt){for(const f of netFighters){const target=netRemoteTargets.get(f.uid);if(!target)continue;const age=Math.min(.10,(performance.now()-target.stamp)/1000),tx=target.x+(target.vx||0)*age*60,ty=target.y+(target.vy||0)*age*60;const smoothing=Math.min(1,dt*17);f.x+=(tx-f.x)*smoothing;f.y+=(ty-f.y)*smoothing;f.anim+=dt;if(f.knockTime>0){f.knockTime=Math.max(0,f.knockTime-dt);f.knockAge+=dt}if(f.inv>0)f.inv=Math.max(0,f.inv-dt);}for(const a of netProjectiles)a.life+=dt}
+window.SKY_NET_BRIDGE={start:netSetup,receive:netReceive,step:(dt,inputs)=>{if(netIsHost)netHostStep(dt,inputs||{});else netAnimateGuest(dt)},snapshot:netSerialize,stop:()=>{netFighters=[];netProjectiles=[];netRemoteTargets.clear();netIsHost=false;netViewMirror=false;netOwnUid='';document.body.classList.remove('net-playing');backMenu();},getFighters:()=>netFighters,isMirrored:()=>netViewMirror,mode:()=>mode,thumbnail:(type)=>{const im=type==='hammer'?hammerImgs.idle:type==='mage'?mageImgs.idle:type==='thief'?thiefImgs.idle:imgs.idle;const out=document.createElement('canvas');out.width=110;out.height=110;const cx=out.getContext('2d');if(im?.complete&&im.naturalWidth){cx.imageSmoothingEnabled=false;const sw=im.naturalWidth/(type==='thief'?4:6),sh=im.naturalHeight;cx.drawImage(im,0,0,sw,sh,12,5,86,100)}return out.toDataURL('image/png')}};
 
 function frame(t){if(!last)last=t;const delta=Math.min(.045,(t-last)/1000);last=t;if(mode==='playing'||mode==='netplaying'){accum+=delta;while(accum>=1/60){if(mode==='playing')update(1/60);else{now+=1/60;window.SKY_NET_STEP?.(1/60)}accum-=1/60;if(mode!=='playing'&&mode!=='netplaying')break}if(accum>1/30)accum=1/60}render();requestAnimationFrame(frame)}resize();reset();placeControls();updateTouchVisibility();requestAnimationFrame(frame);
 })();
@@ -884,7 +898,7 @@ let fb=null,db=null,auth=null,me=null,profile=null,online=false,screen='none',co
 let friends={},requests={},invites={},roomId='',roomMeta=null,members={},ready={},votes={},phase='';
 let roomRefs=[],globalRefs=[],friendPresenceRefs=[],activeRoomPassword='',chosenCharacter='sword',chosenStage='',resultVote='',roomIsHost=false,phaseHandled='',lastRoster=null;
 let hostInputs={},localInput={move:0,guard:false,attackSeq:0,specialSeq:0,jumpSeq:0},sentInputAt=0,lastSnapshotAt=0,lastHudAt=0,lastSentSignature='';
-let serverTimeOffset=0,busy=false,waiting=false;
+let serverTimeOffset=0,busy=false,waiting=false,netStateWriteBusy=false,netInputWriteBusy=false,netQueuedInput=null,netWriteFailures=0;
 const CHAR_NAMES={sword:'戦士',hammer:'白銀ハンマー騎士',mage:'魔法使い',thief:'シーフ'};
 const esc=v=>String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 const id8=()=>Array.from(crypto.getRandomValues(new Uint8Array(9))).map(x=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[x%32]).join('').slice(0,8);
@@ -1002,14 +1016,37 @@ async function maybeStartMatch(){if(waiting||roomMeta?.phase!=='character'||!roo
  const sorted=roomMembers().map(([uid])=>uid);const picks=await Promise.all(sorted.map(uid=>roomPath('picks/'+uid).once('value')));const roster={};for(let i=0;i<sorted.length;i++){const uid=sorted[i],type=picks[i].val()?.type;if(!CHAR_NAMES[type])return;roster[uid]={name:members[uid].name,type,team:i%2}}
  lastRoster=roster;await roomPath('meta').update({roster,phase:'battle',battleId:(roomMeta.battleId||0)+1,deadline:0});
  }catch(e){console.error(e)}finally{waiting=false}}
-function startBattleView(){const m=roomMeta;if(!m?.roster)return;chosenStage='';layer.classList.remove('active');layer.innerHTML='';phaseHandled='battle-'+(m.battleId||0);hud.classList.add('active');
+window.SKY_NET_LOCAL_UID=()=>me?.uid||'';
+function startBattleView(){const m=roomMeta;if(!m?.roster)return;chosenStage='';layer.classList.remove('active');layer.innerHTML='';phaseHandled='battle-'+(m.battleId||0);hud.classList.add('active');hud.dataset.roster='';
  const already=window.SKY_NET_BRIDGE?.mode()==='netplaying';if(already)window.SKY_NET_BRIDGE.stop();
  window.SKY_NET_BRIDGE.start({stage:m.stage,roster:m.roster,format:m.format,host:roomIsHost});lastRoster=m.roster;window.SKY_NET_INPUTS=()=>({...hostInputs,[me.uid]:localInput});
  localInput={move:0,guard:false,down:false,attackSeq:0,specialSeq:0,jumpSeq:0};sentInputAt=0;lastSnapshotAt=0;lastHudAt=0;lastSentSignature='';
  if(roomIsHost)hostInputs[me.uid]=localInput;startInputStream();updateHUD();}
-function updateHUD(){if(!hud.classList.contains('active'))return;const fighters=window.SKY_NET_BRIDGE?.getFighters()||[];hud.innerHTML=fighters.map(f=>`<div class="mh ${f.uid===me.uid?'me':''}"><strong>${esc(f.displayLabel)} ${f.uid===me.uid?'★':''}</strong><small>HP ${Math.ceil(f.hp)}/100　${'●'.repeat(f.stocks||0)}${'○'.repeat(3-(f.stocks||0))}</small><div class="meter"><i style="width:${Math.max(0,f.hp)}%"></i></div><small>固有技 ${f.rangedCooldown>0?f.rangedCooldown.toFixed(1)+'秒':'READY'}</small></div>`).join('')}
+function updateHUD(){
+ if(!hud.classList.contains('active'))return;
+ const fighters=window.SKY_NET_BRIDGE?.getFighters()||[];
+ const ordered=[...fighters].sort((a,b)=>(a.uid===me.uid?-1:0)-(b.uid===me.uid?-1:0));
+ // Keep markup stable to prevent relayout/repaint stalls during gameplay.
+ const ids=ordered.map(f=>f.uid).join('|');
+ if(hud.dataset.roster!==ids){hud.dataset.roster=ids;hud.innerHTML=ordered.map((f,i)=>`<div class="hud-card ${i?'bot':''}" data-fighter="${esc(f.uid)}"><div class="guard-row"><span class="guard-label">GUARD</span><span class="guard-icons"></span></div><div class="stock-status"><span>STOCKS</span><span class="stock-count"></span></div><div class="hp-meta"><span class="name">${i?'RIVAL':'PLAYER'} <small>${esc(f.displayLabel||'')}</small></span><span class="value"><span class="hp-number">100</span><span class="caption"> / 100 HP</span></span></div><div class="bar"><div class="fill"></div></div><div class="special-label">固有スキル <span class="cd-text">READY</span></div><div class="special-bar"><div class="special-fill"></div></div></div>`).join('')}
+ const cards=hud.querySelectorAll('.hud-card');ordered.forEach((f,i)=>{const card=cards[i];if(!card)return;card.querySelector('.hp-number').textContent=Math.max(0,Math.ceil(f.hp||0));card.querySelector('.bar .fill').style.width=Math.max(0,Math.min(100,f.hp||0))+'%';card.querySelector('.stock-count').textContent='● '.repeat(f.stocks||0)+'○ '.repeat(Math.max(0,3-(f.stocks||0)));const g=card.querySelector('.guard-icons'),guard=Math.max(0,f.guard||0);if(g.dataset.guard!==String(guard)){g.dataset.guard=String(guard);g.innerHTML=Array.from({length:3},(_,j)=>'<span class="guard-icon'+(j<guard?'':' empty')+'"></span>').join('')}const cd=Math.max(0,f.rangedCooldown||0),maxCD={sword:2,hammer:5,mage:1,thief:3}[f.type]||2;card.querySelector('.cd-text').textContent=cd>0?cd.toFixed(1)+'秒':'READY';card.querySelector('.special-fill').style.width=(100*(1-Math.min(1,cd/maxCD)))+'%';});
+}
 function startInputStream(){if(roomMeta?.phase!=='battle')return;sendInput();}
-function sendInput(){if(!roomId||roomMeta?.phase!=='battle'||!me)return;const signature=JSON.stringify(localInput),t=Date.now();if(!roomIsHost&&signature===lastSentSignature&&t-sentInputAt<350)return;lastSentSignature=signature;sentInputAt=t;const inp={...localInput,at:fb.database.ServerValue.TIMESTAMP};if(roomIsHost){hostInputs[me.uid]={...localInput};return}roomPath('inputs/'+me.uid).set(inp).catch(console.warn)}
+function sendInput(force=false){
+ if(!roomId||roomMeta?.phase!=='battle'||!me)return;
+ const t=Date.now(),mirror=!!window.SKY_NET_BRIDGE?.isMirrored();
+ const canonical={...localInput,move:mirror?-(localInput.move||0):(localInput.move||0)};
+ const signature=JSON.stringify(canonical);
+ if(roomIsHost){hostInputs[me.uid]=canonical;return}
+ if(!force&&signature===lastSentSignature&&t-sentInputAt<320)return;
+ netQueuedInput=canonical;
+ if(netInputWriteBusy)return;
+ netInputWriteBusy=true;const data=netQueuedInput;netQueuedInput=null;
+ lastSentSignature=JSON.stringify(data);sentInputAt=t;
+ roomPath('inputs/'+me.uid).set({...data,at:fb.database.ServerValue.TIMESTAMP})
+ .catch(e=>{netWriteFailures++;if(netWriteFailures===1)console.warn('online input',e)})
+ .finally(()=>{netInputWriteBusy=false;if(netQueuedInput&&roomMeta?.phase==='battle')sendInput(true)});
+}
 function setInput(kind,value){if(roomMeta?.phase!=='battle')return;
  if(kind==='stick')localInput.move=Math.abs(value)<.23?0:Math.sign(value);
  else if(kind==='guard')localInput.guard=value==='down';
@@ -1024,11 +1061,19 @@ const pressed=new Set();window.SKY_NET_MOUSE_MOVE=(action,value)=>{const code=ac
 window.addEventListener('keydown',e=>{if(window.SKY_NET_BRIDGE?.mode()!=='netplaying')return;const mapped=window.SKY_KEY_ACTION?.(e.code);const code=({left:'KeyA',right:'KeyD',down:'KeyS',jump:'Space',guard:'KeyF',pause:'Escape'})[mapped]||e.code;if(['KeyA','KeyD','Space','KeyF','Escape'].includes(code))e.preventDefault();if(code==='Escape'){window.SKY_NET_LEAVE_PROMPT();return}if(pressed.has(code))return;pressed.add(code);if(code==='KeyA'||code==='KeyD')setInput('stick',keyMovement());if(code==='KeyF')setInput('guard','down');if(code==='KeyS')setInput('down','down');if(code==='Space')setInput('jump','down')},true);
 window.addEventListener('keyup',e=>{const mapped=window.SKY_KEY_ACTION?.(e.code);const code=({left:'KeyA',right:'KeyD',down:'KeyS',jump:'Space',guard:'KeyF',pause:'Escape'})[mapped]||e.code;if(!pressed.has(code))return;pressed.delete(code);if(window.SKY_NET_BRIDGE?.mode()!=='netplaying')return;if(code==='KeyA'||code==='KeyD')setInput('stick',keyMovement());if(code==='KeyF')setInput('guard','up');if(code==='KeyS')setInput('down','up')},true);
 window.addEventListener('blur',()=>{pressed.clear();if(window.SKY_NET_BRIDGE?.mode()==='netplaying'){setInput('stick',0);setInput('guard','up');setInput('down','up')}},true);
-window.SKY_NET_STEP=dt=>{if(!roomId||roomMeta?.phase!=='battle')return;
+window.SKY_NET_STEP=dt=>{
+ if(!roomId||roomMeta?.phase!=='battle')return;
  window.SKY_NET_BRIDGE.step(dt,window.SKY_NET_INPUTS?.());
- if(roomIsHost&&Date.now()-lastSnapshotAt>66){lastSnapshotAt=Date.now();roomPath('state').set(window.SKY_NET_BRIDGE.snapshot()).catch(console.warn)}
- if(!roomIsHost&&Date.now()-sentInputAt>95)sendInput();
- if(Date.now()-(lastHudAt||0)>230){lastHudAt=Date.now();updateHUD();}
+ const t=Date.now();
+ // A single outstanding write maximum: no backlog if Firebase/network stalls.
+ if(roomIsHost&&t-lastSnapshotAt>=115&&!netStateWriteBusy){
+  lastSnapshotAt=t;netStateWriteBusy=true;
+  roomPath('state').set(window.SKY_NET_BRIDGE.snapshot())
+   .catch(e=>{netWriteFailures++;if(netWriteFailures===1)console.warn('online state',e)})
+   .finally(()=>{netStateWriteBusy=false});
+ }
+ if(!roomIsHost&&t-sentInputAt>=145)sendInput();
+ if(t-lastHudAt>160){lastHudAt=t;updateHUD()}
 };
 window.SKY_NET_FINISH=async winner=>{if(!roomIsHost||roomMeta?.phase!=='battle')return;try{await roomPath('meta').update({phase:'results',winner,deadline:serverNow()+5000})}catch(e){console.error(e)}};
 function renderResults(){hud.classList.remove('active');document.body.classList.remove('net-playing');let label='引き分け';if(roomMeta.winner!=='draw'){if(roomMeta.format==='team')label='チーム '+(Number(roomMeta.winner)+1)+' 勝利';else label=(roomMeta.roster?.[roomMeta.winner]?.name||'プレイヤー')+' 勝利'}
